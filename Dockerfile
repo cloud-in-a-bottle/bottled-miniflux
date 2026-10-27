@@ -1,4 +1,4 @@
-FROM miniflux/miniflux:latest AS miniflux
+FROM docker.io/miniflux/miniflux:2.3.4@sha256:72e49f513a63104506aab98ba8cfc3a409d4fde23550a583dec07ec941f1e94e AS miniflux
 
 FROM alpine:3.20
 
