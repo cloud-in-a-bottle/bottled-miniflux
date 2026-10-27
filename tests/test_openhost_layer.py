@@ -15,7 +15,11 @@ def _context(stack: OpenhostStack, response: requests.Response | None) -> str:
 
 
 def _owner_page(stack: OpenhostStack, path: str) -> requests.Response:
-    """GET a page as the owner's browser would, retrying while the app finishes booting."""
+    """GET a page as the owner's browser would, retrying while the app finishes booting.
+
+    Miniflux answers the first proxy-authenticated request by creating a session and redirecting to /unread, so a
+    request only counts once it lands on the page asked for.
+    """
     deadline = time.monotonic() + 90
     response = None
     while time.monotonic() < deadline:
@@ -23,7 +27,7 @@ def _owner_page(stack: OpenhostStack, path: str) -> requests.Response:
             response = stack.owner_session.get(f"{stack.url}{path}", headers=HTML, timeout=30)
         except requests.ConnectionError:
             response = None
-        if response is not None and response.status_code == 200:
+        if response is not None and response.status_code == 200 and urllib.parse.urlparse(response.url).path == path:
             return response
         time.sleep(2)
     raise AssertionError(f"owner GET {path} never returned 200\n{_context(stack, response)}")
@@ -32,7 +36,6 @@ def _owner_page(stack: OpenhostStack, path: str) -> requests.Response:
 def test_owner_is_logged_in_as_admin_user(stack: OpenhostStack) -> None:
     # Without the proxy-auth header Miniflux redirects to its (local-auth-disabled) login page at /.
     response = _owner_page(stack, "/settings")
-    assert urllib.parse.urlparse(response.url).path == "/settings", _context(stack, response)
     username = re.search(r'name="username"[^>]*value="([^"]*)"', response.text)
     assert username is not None, _context(stack, response)
     assert username.group(1) == "admin", _context(stack, response)
@@ -51,7 +54,8 @@ def test_anonymous_access(stack: OpenhostStack) -> None:
     assert refused, f"anonymous GET /unread was not refused by the router: {page.status_code} {page.headers}"
 
     # /js/ is public so browsers can register the service worker without an auth redirect.
-    owner_html = _owner_page(stack, "/unread").text
+    # Any Miniflux page references them (even its login page, so this doesn't depend on SSO working).
+    owner_html = stack.owner_session.get(f"{stack.url}/unread", headers=HTML, timeout=30).text
     scripts = re.findall(r'"(/js/[^"]+\.js)"', owner_html)
     assert scripts, f"no /js/ scripts referenced by the owner's page: {owner_html[:2000]}"
     for script in scripts:
@@ -61,5 +65,4 @@ def test_anonymous_access(stack: OpenhostStack) -> None:
 
 
 def test_database_lives_in_app_data(stack: OpenhostStack) -> None:
-    _owner_page(stack, "/unread")
     assert (stack.data_dir / "pgdata").is_dir(), f"no pgdata under {stack.data_dir}: {list(stack.data_dir.iterdir())}"
