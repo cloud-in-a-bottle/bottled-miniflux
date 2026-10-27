@@ -14,3 +14,12 @@ def test_app_serves_owner(stack: OpenhostStack) -> None:
     assert response.status_code < 400, (
         f"GET / returned {response.status_code}: {response.text[:500]}\n\napp logs:\n{stack.app_logs()[-5000:]}"
     )
+
+
+def test_base_url_matches_app_url(stack: OpenhostStack) -> None:
+    # The harness zone is `harness.localhost:<port>`: BASE_URL must be plain http, with that port once. The
+    # integrations page prints the Fever endpoint from it. The first request may be spent on auth-proxy login.
+    stack.owner_session.get(f"{stack.url}/", timeout=30)
+    response = stack.owner_session.get(f"{stack.url}/integrations", timeout=30)
+    assert response.status_code == 200, response.text[:500]
+    assert f"<strong>{stack.url}/fever/</strong>" in response.text, response.text[:2000]
