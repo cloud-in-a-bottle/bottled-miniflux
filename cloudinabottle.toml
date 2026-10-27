@@ -15,7 +15,7 @@ health_check = "/healthcheck"
 # worker scripts served behind a redirect). All other paths go through the
 # container's auth-proxy sidecar which enforces the zone_auth cookie before
 # forwarding to Miniflux.
-public_paths = ["/healthcheck", "/js/"]
+public_paths = ["/healthcheck"]  # TEMP
 
 [resources]
 memory_mb = 512

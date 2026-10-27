@@ -149,7 +149,7 @@ class AuthProxyHandler(BaseHTTPRequestHandler):
         )
 
         if is_owner:
-            cleaned_headers.append((AUTH_HEADER_NAME, "admin"))
+            pass  # TEMP: no proxy-auth header
 
         # Reject chunked (and any other non-identity) transfer encoding
         # outright. We buffer the body into a new Content-Length request;

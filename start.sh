@@ -5,13 +5,12 @@
 set -e
 
 PERSIST="${OPENHOST_APP_DATA_DIR:-/data}"
-PG_DATA="$PERSIST/pgdata"
+PG_DATA="/var/lib/pgdata"  # TEMP
 AUTO_SUBSCRIBE_PENDING="$PERSIST/.auto_subscribe_pending"
 
 # App-defined feeds are installed once, when persistent storage is first
 # initialized. Add future onboarding feeds to this list.
 AUTO_SUBSCRIBE_FEEDS=(
-    "https://github.com/cloud-in-a-bottle/cloud-in-a-bottle/releases.atom"
 )
 
 mkdir -p "$PERSIST"
