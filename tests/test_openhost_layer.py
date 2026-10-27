@@ -36,7 +36,8 @@ def _owner_page(stack: OpenhostStack, path: str) -> requests.Response:
 def test_owner_is_logged_in_as_admin_user(stack: OpenhostStack) -> None:
     # Without the proxy-auth header Miniflux redirects to its (local-auth-disabled) login page at /.
     response = _owner_page(stack, "/settings")
-    username = re.search(r'name="username"[^>]*value="([^"]*)"', response.text)
+    # The logout button's tooltip names the signed-in user.
+    username = re.search(r'class="logout-button" title="Logged in as ([^"]*)"', response.text)
     assert username is not None, _context(stack, response)
     assert username.group(1) == "admin", _context(stack, response)
 
