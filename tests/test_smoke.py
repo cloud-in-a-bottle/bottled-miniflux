@@ -1,3 +1,4 @@
+import re
 import time
 
 from openhost_test_harness import OpenhostStack
@@ -22,4 +23,6 @@ def test_base_url_matches_app_url(stack: OpenhostStack) -> None:
     stack.owner_session.get(f"{stack.url}/", timeout=30)
     response = stack.owner_session.get(f"{stack.url}/integrations", timeout=30)
     assert response.status_code == 200, response.text[:500]
-    assert f"<strong>{stack.url}/fever/</strong>" in response.text, response.text[:2000]
+    fever_endpoint = re.search(r"<strong>([^<]*/fever/)</strong>", response.text)
+    assert fever_endpoint is not None, response.text[:2000]
+    assert fever_endpoint.group(1) == f"{stack.url}/fever/"
