@@ -36,6 +36,8 @@ oh app deploy https://github.com/imbue-openhost/bottled-miniflux --wait
 
 The app will be available at `miniflux.{zone_domain}`. Browse to it and you're signed in — no separate password.
 
+`cloudinabottle.toml` sets `prebuilt_image`, so Cloud in a Bottle pulls our signed prebuilt image (built by CI from each release tag) instead of building the Dockerfile. To fork and modify this app, comment out `prebuilt_image` so your instance builds from source.
+
 ## Data
 
 All persistent data lives in `$OPENHOST_APP_DATA_DIR/`:
